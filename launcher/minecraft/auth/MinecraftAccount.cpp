@@ -241,10 +241,23 @@ bool MinecraftAccount::shouldRefresh() const
 
 void MinecraftAccount::fillSession(AuthSessionPtr session)
 {
-  if (data.type == AccountType::Offline) {
-        session->user_type = "mojang"; 
+    // 1. تمرير الاسم والـ UUID الأصليين الموجودين في بيانات الحساب
+    session->player_name = data.minecraftProfile.name;
+    session->uuid = data.minecraftProfile.id;
+
+    // 2. تطبيق التعديل الخاص بنوع الحساب (الذي قمت به في الصورة)
+    if (data.type == AccountType::Offline) {
+        session->user_type = "mojang";
     } else {
         session->user_type = typeString();
+    }
+
+    // 3. التأكد من إنشاء الـ session token (ضروري لكي تقبل اللعبة بياناتك)
+    if (!data.accessToken().isEmpty()) {
+        session->access_token = data.accessToken();
+        session->session = "token:" + data.accessToken() + ":" + data.profileId();
+    } else {
+        session->session = "-";
     }
 }
 
